@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+
+# Audio recordings (keep private)
+recordings/*.m4a
+recordings/*.wav
+recordings/*.mp3
+recordings/*.mp4
+recordings/*.webm
+
+# Whisper models cache
+*.pt
+
+# Google OAuth credentials (sensitive)
+.credentials/
+
+# LaunchAgent logs
+logs/

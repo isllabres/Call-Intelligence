@@ -1,0 +1,35 @@
+[project]
+name = "call-intel"
+version = "0.1.0"
+description = "Personal call intelligence — transcribe, analyze, and extract insights from call recordings"
+requires-python = ">=3.11"
+dependencies = [
+    "faster-whisper>=1.1.0",
+    "anthropic>=0.40.0",
+    "click>=8.1.0",
+    "pydantic>=2.0.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
+    "pydub>=0.25.1",
+    "google-api-python-client>=2.130.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.0",
+    "watchdog>=4.0.0",
+]
+
+[project.optional-dependencies]
+diarize = [
+    "pyannote.audio>=3.3.0",
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+]
+
+[project.scripts]
+call-intel = "call_intel.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/call_intel"]

@@ -1,0 +1,48 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+
+def _find_project_root() -> Path:
+    current = Path.cwd()
+    for parent in [current, *current.parents]:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    return current
+
+
+PROJECT_ROOT = _find_project_root()
+
+load_dotenv(PROJECT_ROOT / ".env")
+
+
+def get_anthropic_key() -> str:
+    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not key:
+        raise RuntimeError(
+            "ANTHROPIC_API_KEY not set. Copy .env.example to .env and fill in your key."
+        )
+    return key
+
+
+def get_hf_token() -> str | None:
+    return os.environ.get("HF_TOKEN")
+
+
+def get_whisper_model() -> str:
+    return os.environ.get("WHISPER_MODEL", "base.en")
+
+
+def get_my_speaker_name() -> str:
+    return os.environ.get("MY_SPEAKER_NAME", "Me")
+
+
+def get_output_dir() -> Path:
+    return PROJECT_ROOT / "output"
+
+
+def get_recordings_dir() -> Path:
+    return PROJECT_ROOT / "recordings"
