@@ -9,7 +9,6 @@ from rich.console import Console
 
 from .analyze import analyze
 from .config import get_output_dir
-from .diarize import diarize
 from .filename import parse_recording_name, project_slug
 from .google_auth import is_authenticated
 from .markdown import update_index, write_call_output
@@ -42,8 +41,6 @@ def process_call(
     project: str | None = None,
     date: datetime | None = None,
     speakers: list[str] | None = None,
-    num_speakers: int | None = None,
-    skip_diarize: bool = False,
     skip_analysis: bool = False,
     skip_google: bool = False,
     context: str = "",
@@ -78,29 +75,7 @@ def process_call(
         f"({transcript.duration_seconds / 60:.1f} min)"
     )
 
-    # Step 2: Speaker Diarization
-    if not skip_diarize:
-        try:
-            console.rule("[bold blue]Step 2: Speaker Diarization")
-            transcript = diarize(audio_path, transcript, num_speakers=num_speakers)
-            detected_speakers = sorted(
-                {s.speaker for s in transcript.segments if s.speaker and s.speaker != "Unknown"}
-            )
-            if speakers:
-                label_map = dict(zip(detected_speakers, speakers))
-                for seg in transcript.segments:
-                    if seg.speaker in label_map:
-                        seg.speaker = label_map[seg.speaker]
-                detected_speakers = speakers
-            console.print(
-                f"[green]✓[/green] Identified {len(detected_speakers)} speakers: "
-                f"{', '.join(detected_speakers)}"
-            )
-        except RuntimeError as e:
-            console.print(f"[yellow]⚠ Skipping diarization:[/yellow] {e}")
-            skip_diarize = True
-
-    if skip_diarize and speakers:
+    if speakers:
         for seg in transcript.segments:
             seg.speaker = speakers[0] if len(speakers) == 1 else None
 
@@ -108,12 +83,12 @@ def process_call(
         {s.speaker for s in transcript.segments if s.speaker and s.speaker != "Unknown"}
     )
 
-    # Step 3: Gather context
+    # Step 2: Gather context
     project_context_text = ""
     email_context_text = ""
 
     if project and not skip_analysis:
-        console.rule("[bold blue]Step 3: Gathering Context")
+        console.rule("[bold blue]Step 2: Gathering Context")
 
         from .project_context import format_project_context, get_project_history
 
@@ -138,7 +113,7 @@ def process_call(
     # Step 4: AI Analysis
     analysis_result = None
     if not skip_analysis:
-        console.rule("[bold blue]Step 4: AI Analysis")
+        console.rule("[bold blue]Step 3: AI Analysis")
         analysis_result = analyze(
             transcript,
             title=title,
@@ -161,7 +136,7 @@ def process_call(
 
     # Step 5: Google Suite integration
     if not skip_analysis and not skip_google and is_authenticated():
-        console.rule("[bold blue]Step 5: Google Suite Sync")
+        console.rule("[bold blue]Step 4: Google Suite Sync")
 
         if analysis_result.calendar_events:
             try:

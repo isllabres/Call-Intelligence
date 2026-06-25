@@ -23,10 +23,6 @@ def get_ollama_model() -> str:
     return os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
 
 
-def get_hf_token() -> str | None:
-    return os.environ.get("HF_TOKEN")
-
-
 def get_whisper_model() -> str:
     return os.environ.get("WHISPER_MODEL", "base.en")
 

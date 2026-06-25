@@ -27,8 +27,6 @@ def cli():
     "--speakers", "-s",
     help="Comma-separated speaker names in order (e.g. 'Me,Sarah,John')",
 )
-@click.option("--num-speakers", "-n", type=int, help="Expected number of speakers")
-@click.option("--no-diarize", is_flag=True, help="Skip speaker diarization")
 @click.option("--no-analysis", is_flag=True, help="Skip AI analysis")
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync (Calendar, Tasks)")
 @click.option("--context", "-c", help="Additional context about the call")
@@ -39,8 +37,6 @@ def process(
     project: str | None,
     date: str | None,
     speakers: str | None,
-    num_speakers: int | None,
-    no_diarize: bool,
     no_analysis: bool,
     no_google: bool,
     context: str | None,
@@ -62,8 +58,6 @@ def process(
         project=project,
         date=parsed_date,
         speakers=speaker_list,
-        num_speakers=num_speakers,
-        skip_diarize=no_diarize,
         skip_analysis=no_analysis,
         skip_google=no_google,
         context=context or "",
@@ -103,9 +97,8 @@ def auth():
 
 
 @cli.command()
-@click.option("--no-diarize", is_flag=True, help="Skip speaker diarization")
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync")
-def watch(no_diarize: bool, no_google: bool):
+def watch(no_google: bool):
     """Watch the recordings folder and auto-process new files.
 
     Monitors recordings/ for new audio files and automatically runs
@@ -114,13 +107,12 @@ def watch(no_diarize: bool, no_google: bool):
     """
     from .watcher import watch_recordings
 
-    watch_recordings(skip_diarize=no_diarize, skip_google=no_google)
+    watch_recordings(skip_google=no_google)
 
 
 @cli.command(name="process-new")
-@click.option("--no-diarize", is_flag=True, help="Skip speaker diarization")
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync")
-def process_new(no_diarize: bool, no_google: bool):
+def process_new(no_google: bool):
     """Process all unprocessed recordings in the recordings folder."""
     from .pipeline import process_call
     from .watcher import find_unprocessed
@@ -140,7 +132,6 @@ def process_new(no_diarize: bool, no_google: bool):
         try:
             process_call(
                 audio_path=audio_path,
-                skip_diarize=no_diarize,
                 skip_google=no_google,
             )
         except Exception as e:

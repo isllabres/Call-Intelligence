@@ -16,8 +16,7 @@ AUDIO_EXTENSIONS = {".m4a", ".wav", ".mp3", ".mp4", ".webm", ".ogg", ".flac"}
 
 
 class RecordingHandler(FileSystemEventHandler):
-    def __init__(self, skip_diarize: bool = False, skip_google: bool = False):
-        self.skip_diarize = skip_diarize
+    def __init__(self, skip_google: bool = False):
         self.skip_google = skip_google
         self._processing: set[str] = set()
 
@@ -46,7 +45,6 @@ class RecordingHandler(FileSystemEventHandler):
 
             process_call(
                 audio_path=path,
-                skip_diarize=self.skip_diarize,
                 skip_google=self.skip_google,
             )
         except Exception as e:
@@ -98,14 +96,12 @@ def find_unprocessed(recordings_dir: Path | None = None) -> list[Path]:
 
 def watch_recordings(
     recordings_dir: Path | None = None,
-    skip_diarize: bool = False,
     skip_google: bool = False,
 ):
     recordings_dir = recordings_dir or get_recordings_dir()
     recordings_dir.mkdir(parents=True, exist_ok=True)
 
     handler = RecordingHandler(
-        skip_diarize=skip_diarize,
         skip_google=skip_google,
     )
 

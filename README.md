@@ -7,7 +7,6 @@
 - **Fully local & free** — no API keys, no cloud processing, no subscriptions
 - **Local transcription** with Whisper (via faster-whisper)
 - **Local AI analysis** with Ollama (Llama, Mistral, Qwen, etc.)
-- **Speaker diarization** to identify who said what
 - **Project continuity** — automatically pulls context from previous calls of the same project
 - **Gmail context** — fetches relevant email threads to enrich analysis
 - **Google Calendar sync** — creates events for meetings and deadlines discussed
@@ -53,16 +52,6 @@ Enables Gmail context, Google Calendar events, and Google Tasks.
 6. Download the JSON file
 7. Save it as `.credentials/client_secret.json` in the project root
 8. Run `call-intel auth` to authenticate in your browser
-
-### Speaker Diarization (Optional)
-
-```bash
-uv sync --extra diarize
-```
-
-Requires a [HuggingFace token](https://huggingface.co/settings/tokens) in `.env` (`HF_TOKEN=hf_...`). Accept the model conditions at:
-- https://huggingface.co/pyannote/speaker-diarization-3.1
-- https://huggingface.co/pyannote/segmentation-3.0
 
 ## File Naming Convention
 
@@ -132,20 +121,19 @@ When you process a recording, here's what happens:
 Audio file (.m4a)
     │
     ├─→ Step 1: Whisper transcription (local)
-    ├─→ Step 2: Speaker diarization (local, optional)
-    ├─→ Step 3: Context gathering
+    ├─→ Step 2: Context gathering
     │       ├─ Previous calls for this project
     │       └─ Relevant Gmail threads
-    ├─→ Step 4: Ollama AI analysis (local)
+    ├─→ Step 3: Ollama AI analysis (local)
     │       ├─ Summary, decisions, follow-ups
     │       ├─ Action items → Google Tasks
     │       ├─ Meetings/deadlines → Google Calendar
     │       ├─ Development insights
     │       └─ Speech coaching feedback
-    ├─→ Step 5: Google Suite sync
+    ├─→ Step 4: Google Suite sync
     │       ├─ Create calendar events
     │       └─ Create tasks (grouped by project)
-    └─→ Step 6: Write markdown output
+    └─→ Step 5: Write markdown output
             ├─ transcript.md
             ├─ analysis.md
             └─ meta.json
@@ -169,7 +157,6 @@ All configuration via `.env`:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_MODEL` | `llama3.1:8b` | Ollama model for analysis |
-| `HF_TOKEN` | — | Required for speaker diarization |
 | `WHISPER_MODEL` | `base.en` | Whisper model size |
 | `MY_SPEAKER_NAME` | `Me` | Your name in transcripts (for targeted speech feedback) |
 

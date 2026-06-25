@@ -17,13 +17,6 @@ dependencies = [
     "watchdog>=4.0.0",
 ]
 
-[project.optional-dependencies]
-diarize = [
-    "pyannote.audio>=3.3.0",
-    "torch>=2.0.0",
-    "torchaudio>=2.0.0",
-]
-
 [project.scripts]
 call-intel = "call_intel.cli:cli"
 
