@@ -1,18 +1,19 @@
 # Call Intelligence
 
-Personal call intelligence tool — transcribe recordings, identify speakers, extract insights, and sync tasks and events to Google Suite.
+100% local and free call intelligence tool — transcribe recordings, identify speakers, extract insights, and sync tasks and events to Google Suite. No data leaves your machine.
 
 ## Features
 
-- **Local transcription** with Whisper (private, no audio data leaves your machine)
+- **Fully local & free** — no API keys, no cloud processing, no subscriptions
+- **Local transcription** with Whisper (via faster-whisper)
+- **Local AI analysis** with Ollama (Llama, Mistral, Qwen, etc.)
 - **Speaker diarization** to identify who said what
-- **AI analysis** via Claude — action items, decisions, follow-ups
 - **Project continuity** — automatically pulls context from previous calls of the same project
 - **Gmail context** — fetches relevant email threads to enrich analysis
 - **Google Calendar sync** — creates events for meetings and deadlines discussed
 - **Google Tasks sync** — creates tasks from action items, organized by project
 - **Speech coaching** — filler words, clarity, confidence, structure
-- **Auto-processing** — watches `recordings/` folder for new files
+- **Auto-processing** — LaunchAgent checks for new recordings every hour
 - **GitHub-ready markdown** output for review and version tracking
 
 ## Setup
@@ -21,18 +22,19 @@ Personal call intelligence tool — transcribe recordings, identify speakers, ex
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- [ffmpeg](https://ffmpeg.org/) — required by Whisper for audio processing
-- An [Anthropic API key](https://console.anthropic.com/) for AI analysis
+- [ffmpeg](https://ffmpeg.org/) — required by Whisper
+- [Ollama](https://ollama.com/) — local LLM runtime
 
 ```bash
-# Install ffmpeg (macOS)
-brew install ffmpeg
+# Install dependencies (macOS)
+brew install ffmpeg ollama
+
+# Pull the default model
+ollama pull llama3.1:8b
 
 # Clone and install
 cd call-intelligence
 cp .env.example .env
-# Edit .env with your ANTHROPIC_API_KEY
-
 uv sync
 ```
 
@@ -104,6 +106,8 @@ call-intel watch
 call-intel process-new
 ```
 
+A macOS LaunchAgent is also included that runs `process-new` every hour automatically. It starts on login.
+
 ### Other commands
 
 ```bash
@@ -132,7 +136,7 @@ Audio file (.m4a)
     ├─→ Step 3: Context gathering
     │       ├─ Previous calls for this project
     │       └─ Relevant Gmail threads
-    ├─→ Step 4: Claude AI analysis
+    ├─→ Step 4: Ollama AI analysis (local)
     │       ├─ Summary, decisions, follow-ups
     │       ├─ Action items → Google Tasks
     │       ├─ Meetings/deadlines → Google Calendar
@@ -164,16 +168,26 @@ All configuration via `.env`:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | — | Required for AI analysis |
+| `OLLAMA_MODEL` | `llama3.1:8b` | Ollama model for analysis |
 | `HF_TOKEN` | — | Required for speaker diarization |
 | `WHISPER_MODEL` | `base.en` | Whisper model size |
 | `MY_SPEAKER_NAME` | `Me` | Your name in transcripts (for targeted speech feedback) |
+
+### Ollama Model Options
+
+| Model | RAM | Quality | Speed |
+|-------|-----|---------|-------|
+| `llama3.1:8b` | ~5 GB | Good | Fast |
+| `qwen2.5:7b` | ~5 GB | Good | Fast |
+| `mistral:7b` | ~5 GB | Good | Fast |
+| `gemma2:9b` | ~6 GB | Better | Medium |
+| `llama3.1:70b` | ~40 GB | Best | Slow |
 
 ## Workflow
 
 1. Record calls using Voice Memos on Mac/iPhone
 2. Name the file: `Project Name DD-MM-YYYY`
-3. Copy to `recordings/` (or run `call-intel watch` to auto-detect)
+3. Copy to `recordings/` — the LaunchAgent auto-processes every hour
 4. Review markdown output in `output/`
 5. Check Google Calendar for new events and Google Tasks for action items
 6. Commit output to git for tracking progress over time

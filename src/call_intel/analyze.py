@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 
-import anthropic
+import ollama
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .config import get_anthropic_key, get_my_speaker_name
+from .config import get_my_speaker_name, get_ollama_model
 from .models import Analysis, Transcript
 
 ANALYSIS_SYSTEM_PROMPT = """\
@@ -17,6 +17,8 @@ same project and relevant email threads. Use this context to provide continuity 
 reference prior decisions, track progress on action items, and identify evolving patterns.
 
 Today's date is provided so you can set realistic deadlines.
+
+You MUST respond with valid JSON only — no markdown, no explanation, no text outside the JSON object.
 
 Respond with a JSON object matching this exact schema:
 {
@@ -88,8 +90,8 @@ def analyze(
     email_context: str = "",
     today: str = "",
 ) -> Analysis:
-    client = anthropic.Anthropic(api_key=get_anthropic_key())
     my_name = get_my_speaker_name()
+    model = get_ollama_model()
 
     labeled_text = transcript.as_labeled_text()
 
@@ -118,15 +120,18 @@ Transcript:
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
-        progress.add_task("Analyzing with Claude...", total=None)
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=8192,
-            system=ANALYSIS_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}],
+        progress.add_task(f"Analyzing with Ollama ({model})...", total=None)
+        response = ollama.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            format="json",
+            options={"num_ctx": 8192},
         )
 
-    text = response.content[0].text
+    text = response["message"]["content"]
     start = text.find("{")
     end = text.rfind("}") + 1
     if start == -1 or end == 0:

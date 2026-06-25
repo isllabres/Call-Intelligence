@@ -19,13 +19,8 @@ PROJECT_ROOT = _find_project_root()
 load_dotenv(PROJECT_ROOT / ".env")
 
 
-def get_anthropic_key() -> str:
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not key:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY not set. Copy .env.example to .env and fill in your key."
-        )
-    return key
+def get_ollama_model() -> str:
+    return os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
 
 
 def get_hf_token() -> str | None:
