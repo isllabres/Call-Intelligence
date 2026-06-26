@@ -1,0 +1,188 @@
+[
+  {
+    "id": "case_01_relative_date",
+    "description": "Exact relative date calculation based on current date. 'Next Monday' from 2026-06-25 (Thursday) = 2026-06-29.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Perfecto, entonces enviaré el reporte corregido este próximo lunes por la mañana sin falta.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [
+        {
+          "title_keywords": ["reporte", "corregido"],
+          "due_date": "2026-06-29"
+        }
+      ],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_02_email_contradicts_call",
+    "description": "A recent email explicitly cancels the action agreed on during the call. No tasks or events should be created.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Quedamos así, preparo la propuesta de desarrollo de la app para el miércoles.",
+      "historical_emails": "[2026-06-25 15:30] Cliente: 'Hola, nos acaban de congelar el presupuesto de desarrollo de la app. Solo necesitaremos la consultoría inicial, ignora la propuesta técnica.'",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_03_casual_chat_filter",
+    "description": "Distinguishes between vague wishes / courtesy expressions and real commitments. No actionable output.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "¡Qué buena llamada! A ver si un día de estos nos tomamos unas cervezas para celebrar el acuerdo. Bueno, te dejo que entro a otra reunión.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_04_mid_sentence_correction",
+    "description": "Speaker changes their mind mid-sentence. System must capture only the final agreement, not the retracted one.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Agendemos la revisión del contrato para el martes 30 de junio... ah, espera, no, el martes viajo. Mejor ponla el miércoles 1 de julio a las 4 de la tarde.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [],
+      "new_events": [
+        {
+          "title_keywords": ["revisión", "contrato"],
+          "date": "2026-07-01",
+          "time": "16:00"
+        }
+      ]
+    }
+  },
+  {
+    "id": "case_05_multi_actor_assignment",
+    "description": "Filters out tasks assigned to others. Only extracts tasks for the user (the 'yo' / 'Me' speaker).",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "De acuerdo, Carlos se encargará de subir las imágenes al servidor esta tarde, y yo te preparo el borrador del contrato para mañana.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [
+        {
+          "title_keywords": ["borrador", "contrato"],
+          "due_date": "2026-06-26"
+        }
+      ],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_06_update_existing_task",
+    "description": "Identifies that the action modifies an existing task from history — should update the date, not duplicate.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Oye, sobre la llamada para revisar el diseño que teníamos pensada para hoy, muévela para el próximo viernes, por favor.",
+      "historical_emails": "",
+      "historical_tasks": "[ID: task_99] Revisar diseño con cliente (Vence: 2026-06-25, Estado: Pendiente)"
+    },
+    "expected_output": {
+      "new_tasks": [
+        {
+          "title_keywords": ["revisar", "diseño"],
+          "due_date": "2026-07-03"
+        }
+      ],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_07_explicit_negation",
+    "description": "A task is mentioned but explicitly discarded. Nothing should be created.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Pensé que necesitarías que te enviara el archivo de Excel con las facturas, pero si ya lo tienes en el correo compartido, entonces no hago nada.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_08_linked_event_and_task",
+    "description": "A single sentence triggers both a meeting (event) and a prerequisite action (task) due before it.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Nos vemos el lunes a las 10:00 para la demo, pero envíame los accesos de prueba un día antes para poder revisarlos.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [
+        {
+          "title_keywords": ["accesos", "prueba"],
+          "due_date": "2026-06-28"
+        }
+      ],
+      "new_events": [
+        {
+          "title_keywords": ["demo"],
+          "date": "2026-06-29",
+          "time": "10:00"
+        }
+      ]
+    }
+  },
+  {
+    "id": "case_09_vague_reference_resolved_by_email",
+    "description": "The call uses a vague pronoun ('lo que me mandaste') that can only be resolved by reading the email subject.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Ya revisé lo que me mandaste. Te lo firmo y te lo devuelvo mañana sin falta.",
+      "historical_emails": "[2026-06-24] Asunto: Envío de NDA para firma de servicios de software",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [
+        {
+          "title_keywords": ["NDA", "firma"],
+          "due_date": "2026-06-26"
+        }
+      ],
+      "new_events": []
+    }
+  },
+  {
+    "id": "case_10_multiple_long_term_milestones",
+    "description": "Precise extraction of chained milestones with verbally expressed absolute dates.",
+    "metadata": { "current_date": "2026-06-25" },
+    "input": {
+      "transcription": "Para el proyecto de expansión: la entrega de la fase 1 será el 15 de julio, y la presentación final al comité quedará para el 10 de agosto.",
+      "historical_emails": "",
+      "historical_tasks": ""
+    },
+    "expected_output": {
+      "new_tasks": [
+        {
+          "title_keywords": ["fase 1", "expansión"],
+          "due_date": "2026-07-15"
+        },
+        {
+          "title_keywords": ["presentación", "comité"],
+          "due_date": "2026-08-10"
+        }
+      ],
+      "new_events": []
+    }
+  }
+]

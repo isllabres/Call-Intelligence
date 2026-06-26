@@ -51,7 +51,7 @@ Enables Gmail context, Google Calendar events, and Google Tasks.
 5. Create an **OAuth 2.0 Client ID** (type: Desktop application)
 6. Download the JSON file
 7. Save it as `.credentials/client_secret.json` in the project root
-8. Run `call-intel auth` to authenticate in your browser
+8. Run `uv run call-intel auth` to authenticate in your browser
 
 ## File Naming Convention
 
@@ -70,29 +70,29 @@ The project name and date are automatically parsed from the filename. This group
 
 ```bash
 # Auto-detects project & date from filename
-call-intel process "recordings/Website Redesign 25-06-2026.m4a"
+uv run call-intel process "recordings/Website Redesign 25-06-2026.m4a"
 
 # With explicit metadata
-call-intel process recordings/call.m4a \
+uv run call-intel process recordings/call.m4a \
   --project "Website Redesign" \
   --date 2026-06-25 \
   --speakers "Me,Sarah"
 
 # Skip Google sync
-call-intel process recordings/call.m4a --no-google
+uv run call-intel process recordings/call.m4a --no-google
 
 # Transcription only
-call-intel process recordings/call.m4a --no-analysis
+uv run call-intel process recordings/call.m4a --no-analysis
 ```
 
 ### Auto-process new recordings
 
 ```bash
 # Watch mode — processes files as they appear
-call-intel watch
+uv run call-intel watch
 
 # Process all unprocessed recordings at once
-call-intel process-new
+uv run call-intel process-new
 ```
 
 A macOS LaunchAgent is also included that runs `process-new` every hour automatically. It starts on login.
@@ -101,16 +101,16 @@ A macOS LaunchAgent is also included that runs `process-new` every hour automati
 
 ```bash
 # Authenticate with Google Suite
-call-intel auth
+uv run call-intel auth
 
 # List all processed calls
-call-intel list
+uv run call-intel list
 
 # Search across all calls
-call-intel search "deadline"
+uv run call-intel search "deadline"
 
 # Re-analyze with fresh context
-call-intel analyze output/2026-06-25-website-redesign/transcript.md
+uv run call-intel analyze output/2026-06-25-website-redesign/transcript.md
 ```
 
 ## Pipeline
