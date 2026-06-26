@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import json
 
-import ollama
+import ollama as ollama_client
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelResponse, TextPart
+from pydantic_ai.models.function import AgentInfo, FunctionModel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .config import get_my_speaker_name, get_ollama_model
@@ -82,6 +85,38 @@ Guidelines for tasks:
 """
 
 
+def _ollama_model_function(messages: list, info: AgentInfo) -> ModelResponse:
+    """Bridge between PydanticAI's Agent and the native Ollama API."""
+    ollama_messages = []
+    for msg in messages:
+        if msg.kind == "request":
+            for part in msg.parts:
+                if hasattr(part, "content"):
+                    role = "system" if part.part_kind == "system-prompt" else "user"
+                    ollama_messages.append({"role": role, "content": part.content})
+        elif msg.kind == "response":
+            for part in msg.parts:
+                if hasattr(part, "content"):
+                    ollama_messages.append({"role": "assistant", "content": part.content})
+
+    model_name = get_ollama_model()
+    response = ollama_client.chat(
+        model=model_name,
+        messages=ollama_messages,
+        format="json",
+        options={"num_ctx": 8192},
+    )
+
+    content = response["message"]["content"]
+    return ModelResponse(parts=[TextPart(content=content)])
+
+
+analysis_agent = Agent(
+    model=FunctionModel(_ollama_model_function, model_name="ollama"),
+    system_prompt=ANALYSIS_SYSTEM_PROMPT,
+)
+
+
 def analyze(
     transcript: Transcript,
     title: str = "",
@@ -91,7 +126,6 @@ def analyze(
     today: str = "",
 ) -> Analysis:
     my_name = get_my_speaker_name()
-    model = get_ollama_model()
 
     labeled_text = transcript.as_labeled_text()
 
@@ -120,22 +154,23 @@ Transcript:
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
-        progress.add_task(f"Analyzing with Ollama ({model})...", total=None)
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            format="json",
-            options={"num_ctx": 8192},
-        )
+        progress.add_task(f"Analyzing with Ollama ({get_ollama_model()})...", total=None)
+        result = analysis_agent.run_sync(user_prompt)
 
-    text = response["message"]["content"]
+    text = result.output
     start = text.find("{")
     end = text.rfind("}") + 1
     if start == -1 or end == 0:
         raise RuntimeError(f"Failed to parse analysis response: {text[:200]}")
 
     data = json.loads(text[start:end])
-    return Analysis(**data)
+    return Analysis(**_strip_nulls(data))
+
+
+def _strip_nulls(obj: object) -> object:
+    """Remove null values so Pydantic uses field defaults."""
+    if isinstance(obj, dict):
+        return {k: _strip_nulls(v) for k, v in obj.items() if v is not None}
+    if isinstance(obj, list):
+        return [_strip_nulls(item) for item in obj]
+    return obj
