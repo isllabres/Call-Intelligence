@@ -277,8 +277,8 @@ def eval_config_defaults(suite: EvalSuite):
 
     try:
         from call_intel.config import get_ollama_model, get_whisper_model, get_my_speaker_name
-        assert get_ollama_model() == "llama3.1:8b"
-        assert get_whisper_model() == "base.en"
+        assert get_ollama_model() == "qwen2.5:14b"
+        assert get_whisper_model() == "base"
         assert get_my_speaker_name() == "Me"
         suite.add("config: default values", True)
     except Exception as e:
