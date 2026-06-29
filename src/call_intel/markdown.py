@@ -164,7 +164,10 @@ def update_index(output_root: Path, records: list[CallRecord]) -> None:
     ]
 
     for r in sorted_records:
-        rel_dir = Path(r.output_dir).relative_to(output_root)
+        try:
+            rel_dir = Path(r.output_dir).relative_to(output_root)
+        except ValueError:
+            continue
         date = r.date.strftime("%Y-%m-%d")
         duration = _fmt_time(r.duration_seconds)
         project = r.project or "—"
