@@ -9,7 +9,7 @@ from rich.console import Console
 
 from .analyze import analyze
 from .config import get_output_dir
-from .filename import parse_recording_name, project_slug
+from .filename import parse_filename, parse_recording_name, project_slug
 from .google_auth import is_authenticated
 from .markdown import update_index, write_call_output
 from .models import CallRecord
@@ -23,6 +23,16 @@ def _slugify(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r"[^\w\s-]", "", text)
     return re.sub(r"[\s_]+", "-", text)[:60]
+
+
+def _build_output_dir(
+    project: str, subtitle: str, date: datetime,
+) -> Path:
+    date_str = date.strftime("%d-%m-%Y")
+    if project:
+        subfolder = f"{subtitle} {date_str}" if subtitle else f"Meeting {date_str}"
+        return get_output_dir() / project / subfolder
+    return get_output_dir() / f"Meeting {date_str}"
 
 
 def _load_existing_records(output_dir: Path) -> list[CallRecord]:
@@ -47,20 +57,20 @@ def process_call(
     context: str = "",
     whisper_model: str | None = None,
 ) -> CallRecord:
-    # Parse filename for project and date if not provided
+    subtitle = ""
     if project is None or date is None:
         try:
-            parsed_project, parsed_date = parse_recording_name(audio_path)
-            project = project or parsed_project
-            date = date or parsed_date
-            console.print(f"[dim]Parsed from filename → project: {project}, date: {parsed_date.strftime('%Y-%m-%d')}[/dim]")
+            parsed = parse_filename(audio_path)
+            project = project or parsed.project
+            subtitle = parsed.subtitle
+            date = date or parsed.date
+            console.print(f"[dim]Parsed from filename → project: {project}, date: {parsed.date.strftime('%Y-%m-%d')}[/dim]")
         except ValueError:
             date = date or datetime.now()
 
     project = project or ""
     title = title or (f"{project} — {date.strftime('%Y-%m-%d')}" if project else audio_path.stem.replace("_", " ").replace("-", " ").title())
-    slug = f"{date.strftime('%Y-%m-%d')}-{_slugify(project or title)}"
-    output_dir = get_output_dir() / slug
+    output_dir = _build_output_dir(project, subtitle, date)
 
     console.print(f"\n[bold]Processing:[/bold] {audio_path.name}")
     console.print(f"[bold]Title:[/bold] {title}")
@@ -202,19 +212,20 @@ def process_transcript(
     skip_google: bool = False,
     context: str = "",
 ) -> CallRecord:
+    subtitle = ""
     if project is None or date is None:
         try:
-            parsed_project, parsed_date = parse_recording_name(transcript_path)
-            project = project or parsed_project
-            date = date or parsed_date
-            console.print(f"[dim]Parsed from filename → project: {project}, date: {parsed_date.strftime('%Y-%m-%d')}[/dim]")
+            parsed = parse_filename(transcript_path)
+            project = project or parsed.project
+            subtitle = parsed.subtitle
+            date = date or parsed.date
+            console.print(f"[dim]Parsed from filename → project: {project}, date: {parsed.date.strftime('%Y-%m-%d')}[/dim]")
         except ValueError:
             date = date or datetime.now()
 
     project = project or ""
     title = title or (f"{project} — {date.strftime('%Y-%m-%d')}" if project else transcript_path.stem.replace("_", " ").replace("-", " ").title())
-    slug = f"{date.strftime('%Y-%m-%d')}-{_slugify(project or title)}"
-    output_dir = get_output_dir() / slug
+    output_dir = _build_output_dir(project, subtitle, date)
 
     console.print(f"\n[bold]Processing transcript:[/bold] {transcript_path.name}")
     console.print(f"[bold]Title:[/bold] {title}")

@@ -57,16 +57,18 @@ Enables Gmail context, Google Calendar events, and Google Tasks.
 
 Name your recordings and transcripts as: **`Project Name DD-MM-YYYY.ext`**
 
+Optionally include a subtitle: **`Project Name - Subtitle DD-MM-YYYY.ext`**
+
 Recording examples:
 - `Website Redesign 25-06-2026.m4a`
-- `Client Onboarding 01-07-2026.m4a`
-- `Team Standup 25.06.2026.m4a`
+- `Website Redesign - Kickoff 25-06-2026.m4a`
+- `Client Onboarding - Meet the team 01-07-2026.m4a`
 
 Transcript examples:
 - `Website Redesign 25-06-2026.vtt`
-- `Client Onboarding 01-07-2026.docx`
+- `Website Redesign - Follow up 28-06-2026.docx`
 
-The project name and date are automatically parsed from the filename. This groups calls by project and enables cross-call context. Supported transcript formats: `.vtt` (WebVTT) and `.docx` (Google Docs export).
+The project name, optional subtitle, and date are automatically parsed from the filename. Output is organized by project, then by subtitle and date. Supported transcript formats: `.vtt` (WebVTT) and `.docx` (Google Docs export).
 
 ## Usage
 
@@ -170,10 +172,15 @@ data/
 │   └── transcripts/                      # Transcript files (.vtt, .docx)
 └── output/
     ├── index.md                          # Master index of all calls
-    └── 2026-06-25-website-redesign/
-        ├── transcript.md                 # Full transcript with speakers & timestamps
-        ├── analysis.md                   # AI analysis, tasks, events, coaching
-        └── meta.json                     # Machine-readable metadata
+    └── Website Redesign/                 # Project folder
+        ├── Kickoff 25-06-2026/           # Subtitle + date
+        │   ├── transcript.md
+        │   ├── analysis.md
+        │   └── meta.json
+        └── Meeting 01-07-2026/           # No subtitle → "Meeting"
+            ├── transcript.md
+            ├── analysis.md
+            └── meta.json
 ```
 
 ## Configuration
