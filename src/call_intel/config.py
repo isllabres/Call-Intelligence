@@ -20,7 +20,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 
 def get_ollama_model() -> str:
-    return os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
+    return os.environ.get("OLLAMA_MODEL", "qwen2.5:14b")
 
 
 def get_whisper_model() -> str:
