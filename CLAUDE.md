@@ -13,6 +13,12 @@ Before considering any functionality in `src/` complete, the success rate in `ev
 - `src/call_intel/gmail.py`: Fetches relevant email threads from Gmail for context.
 - `src/call_intel/gcalendar.py`: Creates Google Calendar events from detected meetings/deadlines.
 - `src/call_intel/gtasks.py`: Creates Google Tasks from extracted action items.
-- `src/call_intel/pipeline.py`: Orchestrates the full processing flow.
-- `src/call_intel/watcher.py`: Watches recordings folder and auto-processes new files.
-- `src/call_intel/cli.py`: CLI entry point (process, watch, list, search, analyze, auth).
+- `src/call_intel/transcript_parser.py`: Parses VTT and DOCX transcript files into Transcript models.
+- `src/call_intel/pipeline.py`: Orchestrates the full processing flow (audio and transcript inputs).
+- `src/call_intel/watcher.py`: Watches data/input/recordings/ and data/input/transcripts/ for new files.
+- `src/call_intel/cli.py`: CLI entry point (process, process-transcript, watch, list, search, analyze, auth).
+
+## Data Directory Structure
+- `data/input/recordings/`: Audio files (.m4a, .wav, etc.)
+- `data/input/transcripts/`: Transcript files (.vtt, .docx)
+- `data/output/`: Processed call output (transcript.md, analysis.md, meta.json per call)

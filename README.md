@@ -74,32 +74,32 @@ The project name and date are automatically parsed from the filename. This group
 
 ```bash
 # Auto-detects project & date from filename
-uv run call-intel process "recordings/Website Redesign 25-06-2026.m4a"
+uv run call-intel process "data/input/recordings/Website Redesign 25-06-2026.m4a"
 
 # With explicit metadata
-uv run call-intel process recordings/call.m4a \
+uv run call-intel process data/input/recordings/call.m4a \
   --project "Website Redesign" \
   --date 2026-06-25 \
   --speakers "Me,Sarah"
 
 # Skip Google sync
-uv run call-intel process recordings/call.m4a --no-google
+uv run call-intel process data/input/recordings/call.m4a --no-google
 
 # Transcription only
-uv run call-intel process recordings/call.m4a --no-analysis
+uv run call-intel process data/input/recordings/call.m4a --no-analysis
 ```
 
 ### Process a transcript
 
 ```bash
 # Process a VTT transcript
-uv run call-intel process-transcript "transcripts/Website Redesign 25-06-2026.vtt"
+uv run call-intel process-transcript "data/input/transcripts/Website Redesign 25-06-2026.vtt"
 
 # Process a DOCX transcript
-uv run call-intel process-transcript "transcripts/Client Call 01-07-2026.docx"
+uv run call-intel process-transcript "data/input/transcripts/Client Call 01-07-2026.docx"
 
 # With explicit metadata
-uv run call-intel process-transcript transcripts/call.vtt \
+uv run call-intel process-transcript data/input/transcripts/call.vtt \
   --project "Website Redesign" \
   --date 2026-06-25
 ```
@@ -107,7 +107,7 @@ uv run call-intel process-transcript transcripts/call.vtt \
 ### Auto-process new recordings and transcripts
 
 ```bash
-# Watch mode — monitors recordings/ and transcripts/ for new files
+# Watch mode — monitors data/input/ for new recordings and transcripts
 uv run call-intel watch
 
 # Process all unprocessed recordings and transcripts at once
@@ -129,7 +129,7 @@ uv run call-intel list
 uv run call-intel search "deadline"
 
 # Re-analyze with fresh context
-uv run call-intel analyze output/2026-06-25-website-redesign/transcript.md
+uv run call-intel analyze data/output/2026-06-25-website-redesign/transcript.md
 ```
 
 ## Pipeline
@@ -164,12 +164,16 @@ Audio file (.m4a)                  Transcript file (.vtt, .docx)
 ## Output Structure
 
 ```
-output/
-├── index.md                              # Master index of all calls
-└── 2026-06-25-website-redesign/
-    ├── transcript.md                     # Full transcript with speakers & timestamps
-    ├── analysis.md                       # AI analysis, tasks, events, coaching
-    └── meta.json                         # Machine-readable metadata
+data/
+├── input/
+│   ├── recordings/                       # Audio files (.m4a, .wav, etc.)
+│   └── transcripts/                      # Transcript files (.vtt, .docx)
+└── output/
+    ├── index.md                          # Master index of all calls
+    └── 2026-06-25-website-redesign/
+        ├── transcript.md                 # Full transcript with speakers & timestamps
+        ├── analysis.md                   # AI analysis, tasks, events, coaching
+        └── meta.json                     # Machine-readable metadata
 ```
 
 ## Configuration
@@ -196,7 +200,7 @@ All configuration via `.env`:
 
 1. Record calls using Voice Memos on Mac/iPhone, or obtain a transcript (.vtt or .docx)
 2. Name the file: `Project Name DD-MM-YYYY.ext`
-3. Copy recordings to `recordings/` or transcripts to `transcripts/` — the LaunchAgent auto-processes every hour
-4. Review markdown output in `output/`
+3. Copy recordings to `data/input/recordings/` or transcripts to `data/input/transcripts/` — the LaunchAgent auto-processes every hour
+4. Review markdown output in `data/output/`
 5. Check Google Calendar for new events and Google Tasks for action items
 6. Commit output to git for tracking progress over time

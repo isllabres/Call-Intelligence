@@ -9,7 +9,8 @@ def test_should_return_transcripts_dir_from_config(monkeypatch):
     monkeypatch.delenv("TRANSCRIPTS_DIR", raising=False)
     result = get_transcripts_dir()
     assert result.name == "transcripts"
-    assert result.parent.name != ""
+    assert result.parent.name == "input"
+    assert result.parent.parent.name == "data"
 
 
 def test_should_parse_vtt_file_into_transcript_model(tmp_path):
@@ -103,11 +104,9 @@ def test_should_parse_transcript_filename_for_project_and_date(tmp_path):
 
 
 def test_should_process_transcript_and_write_output(tmp_path, monkeypatch):
-    from call_intel.config import PROJECT_ROOT
     from call_intel.pipeline import process_transcript
 
-    output_dir = tmp_path / "output"
-    output_dir.mkdir()
+    (tmp_path / "data" / "output").mkdir(parents=True)
     monkeypatch.setattr("call_intel.config.PROJECT_ROOT", tmp_path)
 
     vtt_content = """\
@@ -119,8 +118,8 @@ Hello, welcome to the meeting.
 00:00:05.500 --> 00:00:09.200
 Let's discuss the roadmap.
 """
-    transcripts_dir = tmp_path / "transcripts"
-    transcripts_dir.mkdir()
+    transcripts_dir = tmp_path / "data" / "input" / "transcripts"
+    transcripts_dir.mkdir(parents=True)
     vtt_file = transcripts_dir / "acme project 15-03-2026.vtt"
     vtt_file.write_text(vtt_content)
 
@@ -143,10 +142,10 @@ def test_should_detect_unprocessed_transcripts(tmp_path, monkeypatch):
 
     monkeypatch.setattr("call_intel.config.PROJECT_ROOT", tmp_path)
 
-    transcripts_dir = tmp_path / "transcripts"
-    transcripts_dir.mkdir()
-    output_dir = tmp_path / "output"
-    output_dir.mkdir()
+    transcripts_dir = tmp_path / "data" / "input" / "transcripts"
+    transcripts_dir.mkdir(parents=True)
+    output_dir = tmp_path / "data" / "output"
+    output_dir.mkdir(parents=True)
 
     vtt_file = transcripts_dir / "project_x 01-01-2026.vtt"
     vtt_file.write_text("WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello\n")
@@ -161,10 +160,10 @@ def test_should_ignore_unsupported_extensions_in_transcripts_folder(tmp_path, mo
 
     monkeypatch.setattr("call_intel.config.PROJECT_ROOT", tmp_path)
 
-    transcripts_dir = tmp_path / "transcripts"
-    transcripts_dir.mkdir()
-    output_dir = tmp_path / "output"
-    output_dir.mkdir()
+    transcripts_dir = tmp_path / "data" / "input" / "transcripts"
+    transcripts_dir.mkdir(parents=True)
+    output_dir = tmp_path / "data" / "output"
+    output_dir.mkdir(parents=True)
 
     (transcripts_dir / "notes.txt").write_text("some notes")
     (transcripts_dir / "report.pdf").write_text("fake pdf")

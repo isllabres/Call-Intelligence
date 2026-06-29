@@ -32,12 +32,12 @@ def get_my_speaker_name() -> str:
 
 
 def get_output_dir() -> Path:
-    return PROJECT_ROOT / "output"
+    return PROJECT_ROOT / "data" / "output"
 
 
 def get_transcripts_dir() -> Path:
-    return PROJECT_ROOT / "transcripts"
+    return PROJECT_ROOT / "data" / "input" / "transcripts"
 
 
 def get_recordings_dir() -> Path:
-    return PROJECT_ROOT / "recordings"
+    return PROJECT_ROOT / "data" / "input" / "recordings"

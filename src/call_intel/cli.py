@@ -147,11 +147,11 @@ def auth():
 @cli.command()
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync")
 def watch(no_google: bool):
-    """Watch recordings/ and transcripts/ folders for new files.
+    """Watch for new recordings and transcripts.
 
-    Monitors both folders and automatically runs the full pipeline
-    when a file appears. Filenames must follow the convention:
-    'project_name DD-MM-YYYY.ext'
+    Monitors data/input/recordings/ and data/input/transcripts/ and
+    automatically runs the full pipeline when a file appears.
+    Filenames must follow the convention: 'project_name DD-MM-YYYY.ext'
     """
     from .watcher import watch_recordings
 
