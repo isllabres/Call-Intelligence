@@ -8,11 +8,12 @@ from rich.console import Console
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .config import get_output_dir, get_recordings_dir
+from .config import get_output_dir, get_recordings_dir, get_transcripts_dir
 
 console = Console()
 
 AUDIO_EXTENSIONS = {".m4a", ".wav", ".mp3", ".mp4", ".webm", ".ogg", ".flac"}
+TRANSCRIPT_EXTENSIONS = {".vtt", ".docx"}
 
 
 class RecordingHandler(FileSystemEventHandler):
@@ -75,7 +76,10 @@ def get_processed_files() -> set[str]:
     for meta_path in output_dir.rglob("meta.json"):
         try:
             data = json.loads(meta_path.read_text())
-            processed.add(data.get("audio_path", ""))
+            if data.get("source_path"):
+                processed.add(data["source_path"])
+            if data.get("audio_path"):
+                processed.add(data["audio_path"])
         except Exception:
             continue
     return processed
@@ -94,22 +98,97 @@ def find_unprocessed(recordings_dir: Path | None = None) -> list[Path]:
     return unprocessed
 
 
+class TranscriptHandler(FileSystemEventHandler):
+    def __init__(self, skip_google: bool = False):
+        self.skip_google = skip_google
+        self._processing: set[str] = set()
+
+    def on_created(self, event):
+        if event.is_directory:
+            return
+
+        path = Path(event.src_path)
+        if path.suffix.lower() not in TRANSCRIPT_EXTENSIONS:
+            return
+
+        if path.name.startswith("."):
+            return
+
+        if str(path) in self._processing:
+            return
+
+        self._processing.add(str(path))
+        console.print(f"\n[bold cyan]New transcript detected:[/bold cyan] {path.name}")
+
+        self._wait_for_stable(path)
+
+        try:
+            self._process_transcript(path)
+        except Exception as e:
+            console.print(f"[red]Error processing {path.name}:[/red] {e}")
+        finally:
+            self._processing.discard(str(path))
+
+    def _process_transcript(self, path: Path):
+        from .pipeline import process_transcript
+
+        process_transcript(
+            transcript_path=path,
+            skip_google=self.skip_google,
+        )
+
+    def _wait_for_stable(self, path: Path, checks: int = 3, interval: float = 2.0):
+        prev_size = -1
+        stable_count = 0
+        while stable_count < checks:
+            try:
+                size = path.stat().st_size
+            except FileNotFoundError:
+                return
+            if size == prev_size and size > 0:
+                stable_count += 1
+            else:
+                stable_count = 0
+            prev_size = size
+            if stable_count < checks:
+                time.sleep(interval)
+
+
+def find_unprocessed_transcripts(transcripts_dir: Path | None = None) -> list[Path]:
+    transcripts_dir = transcripts_dir or get_transcripts_dir()
+    if not transcripts_dir.exists():
+        return []
+    processed = get_processed_files()
+
+    unprocessed = []
+    for f in sorted(transcripts_dir.iterdir()):
+        if f.suffix.lower() in TRANSCRIPT_EXTENSIONS and not f.name.startswith("."):
+            if str(f.resolve()) not in processed:
+                unprocessed.append(f)
+
+    return unprocessed
+
+
 def watch_recordings(
     recordings_dir: Path | None = None,
+    transcripts_dir: Path | None = None,
     skip_google: bool = False,
 ):
     recordings_dir = recordings_dir or get_recordings_dir()
+    transcripts_dir = transcripts_dir or get_transcripts_dir()
     recordings_dir.mkdir(parents=True, exist_ok=True)
+    transcripts_dir.mkdir(parents=True, exist_ok=True)
 
-    handler = RecordingHandler(
-        skip_google=skip_google,
-    )
+    recording_handler = RecordingHandler(skip_google=skip_google)
+    transcript_handler = TranscriptHandler(skip_google=skip_google)
 
     observer = Observer()
-    observer.schedule(handler, str(recordings_dir), recursive=False)
+    observer.schedule(recording_handler, str(recordings_dir), recursive=False)
+    observer.schedule(transcript_handler, str(transcripts_dir), recursive=False)
     observer.start()
 
     console.print(f"[bold green]Watching for new recordings in:[/bold green] {recordings_dir}")
+    console.print(f"[bold green]Watching for new transcripts in:[/bold green] {transcripts_dir}")
     console.print("[dim]Press Ctrl+C to stop[/dim]\n")
 
     try:

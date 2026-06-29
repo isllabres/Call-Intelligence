@@ -55,14 +55,18 @@ Enables Gmail context, Google Calendar events, and Google Tasks.
 
 ## File Naming Convention
 
-Name your recordings as: **`Project Name DD-MM-YYYY.m4a`**
+Name your recordings and transcripts as: **`Project Name DD-MM-YYYY.ext`**
 
-Examples:
+Recording examples:
 - `Website Redesign 25-06-2026.m4a`
 - `Client Onboarding 01-07-2026.m4a`
 - `Team Standup 25.06.2026.m4a`
 
-The project name and date are automatically parsed from the filename. This groups calls by project and enables cross-call context.
+Transcript examples:
+- `Website Redesign 25-06-2026.vtt`
+- `Client Onboarding 01-07-2026.docx`
+
+The project name and date are automatically parsed from the filename. This groups calls by project and enables cross-call context. Supported transcript formats: `.vtt` (WebVTT) and `.docx` (Google Docs export).
 
 ## Usage
 
@@ -85,13 +89,28 @@ uv run call-intel process recordings/call.m4a --no-google
 uv run call-intel process recordings/call.m4a --no-analysis
 ```
 
-### Auto-process new recordings
+### Process a transcript
 
 ```bash
-# Watch mode — processes files as they appear
+# Process a VTT transcript
+uv run call-intel process-transcript "transcripts/Website Redesign 25-06-2026.vtt"
+
+# Process a DOCX transcript
+uv run call-intel process-transcript "transcripts/Client Call 01-07-2026.docx"
+
+# With explicit metadata
+uv run call-intel process-transcript transcripts/call.vtt \
+  --project "Website Redesign" \
+  --date 2026-06-25
+```
+
+### Auto-process new recordings and transcripts
+
+```bash
+# Watch mode — monitors recordings/ and transcripts/ for new files
 uv run call-intel watch
 
-# Process all unprocessed recordings at once
+# Process all unprocessed recordings and transcripts at once
 uv run call-intel process-new
 ```
 
@@ -115,28 +134,31 @@ uv run call-intel analyze output/2026-06-25-website-redesign/transcript.md
 
 ## Pipeline
 
-When you process a recording, here's what happens:
+The system accepts two input sources: audio recordings and pre-generated transcripts.
 
 ```
-Audio file (.m4a)
-    │
-    ├─→ Step 1: Whisper transcription (local)
-    ├─→ Step 2: Context gathering
-    │       ├─ Previous calls for this project
-    │       └─ Relevant Gmail threads
-    ├─→ Step 3: Ollama AI analysis (local)
-    │       ├─ Summary, decisions, follow-ups
-    │       ├─ Action items → Google Tasks
-    │       ├─ Meetings/deadlines → Google Calendar
-    │       ├─ Development insights
-    │       └─ Speech coaching feedback
-    ├─→ Step 4: Google Suite sync
-    │       ├─ Create calendar events
-    │       └─ Create tasks (grouped by project)
-    └─→ Step 5: Write markdown output
-            ├─ transcript.md
-            ├─ analysis.md
-            └─ meta.json
+Audio file (.m4a)                  Transcript file (.vtt, .docx)
+    │                                      │
+    ├─→ Step 1: Whisper transcription      ├─→ Step 1: Parse transcript
+    │                                      │
+    └──────────────┬───────────────────────┘
+                   │
+                   ├─→ Step 2: Context gathering
+                   │       ├─ Previous calls for this project
+                   │       └─ Relevant Gmail threads
+                   ├─→ Step 3: Ollama AI analysis (local)
+                   │       ├─ Summary, decisions, follow-ups
+                   │       ├─ Action items → Google Tasks
+                   │       ├─ Meetings/deadlines → Google Calendar
+                   │       ├─ Development insights
+                   │       └─ Speech coaching feedback
+                   ├─→ Step 4: Google Suite sync
+                   │       ├─ Create calendar events
+                   │       └─ Create tasks (grouped by project)
+                   └─→ Step 5: Write markdown output
+                           ├─ transcript.md
+                           ├─ analysis.md
+                           └─ meta.json
 ```
 
 ## Output Structure
@@ -157,7 +179,7 @@ All configuration via `.env`:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_MODEL` | `llama3.1:8b` | Ollama model for analysis |
-| `WHISPER_MODEL` | `base.en` | Whisper model size |
+| `WHISPER_MODEL` | `base` | Whisper model size (multilingual) |
 | `MY_SPEAKER_NAME` | `Me` | Your name in transcripts (for targeted speech feedback) |
 
 ### Ollama Model Options
@@ -172,9 +194,9 @@ All configuration via `.env`:
 
 ## Workflow
 
-1. Record calls using Voice Memos on Mac/iPhone
-2. Name the file: `Project Name DD-MM-YYYY`
-3. Copy to `recordings/` — the LaunchAgent auto-processes every hour
+1. Record calls using Voice Memos on Mac/iPhone, or obtain a transcript (.vtt or .docx)
+2. Name the file: `Project Name DD-MM-YYYY.ext`
+3. Copy recordings to `recordings/` or transcripts to `transcripts/` — the LaunchAgent auto-processes every hour
 4. Review markdown output in `output/`
 5. Check Google Calendar for new events and Google Tasks for action items
 6. Commit output to git for tracking progress over time

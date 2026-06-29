@@ -35,5 +35,9 @@ def get_output_dir() -> Path:
     return PROJECT_ROOT / "output"
 
 
+def get_transcripts_dir() -> Path:
+    return PROJECT_ROOT / "transcripts"
+
+
 def get_recordings_dir() -> Path:
     return PROJECT_ROOT / "recordings"
