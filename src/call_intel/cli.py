@@ -30,7 +30,7 @@ def cli():
 @click.option("--no-analysis", is_flag=True, help="Skip AI analysis")
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync (Calendar, Tasks)")
 @click.option("--context", "-c", help="Additional context about the call")
-@click.option("--model", "-m", help="Whisper model size (e.g. base.en, medium.en)")
+@click.option("--model", "-m", help="Whisper model size (e.g. base, medium, large-v3)")
 def process(
     audio_file: Path,
     title: str | None,

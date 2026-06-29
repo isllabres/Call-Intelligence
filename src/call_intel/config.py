@@ -24,7 +24,7 @@ def get_ollama_model() -> str:
 
 
 def get_whisper_model() -> str:
-    return os.environ.get("WHISPER_MODEL", "base.en")
+    return os.environ.get("WHISPER_MODEL", "base")
 
 
 def get_my_speaker_name() -> str:
