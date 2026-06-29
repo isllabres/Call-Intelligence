@@ -104,7 +104,7 @@ def _ollama_model_function(messages: list, info: AgentInfo) -> ModelResponse:
         model=model_name,
         messages=ollama_messages,
         format="json",
-        options={"num_ctx": 8192},
+        options={"num_ctx": 32768},
     )
 
     content = response["message"]["content"]
@@ -164,6 +164,8 @@ Transcript:
         raise RuntimeError(f"Failed to parse analysis response: {text[:200]}")
 
     data = json.loads(text[start:end])
+    if "summary" not in data:
+        data["summary"] = data.pop("title", "No summary provided by the model.")
     return Analysis(**_strip_nulls(data))
 
 

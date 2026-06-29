@@ -69,6 +69,54 @@ def process(
     console.print(f"  Analysis:   {record.output_dir}/analysis.md")
 
 
+@cli.command(name="process-transcript")
+@click.argument("transcript_file", type=click.Path(exists=True, path_type=Path))
+@click.option("--title", "-t", help="Title for the call")
+@click.option("--project", "-p", help="Project name (auto-detected from filename)")
+@click.option("--date", "-d", help="Date of the call (YYYY-MM-DD). Auto-detected from filename.")
+@click.option(
+    "--speakers", "-s",
+    help="Comma-separated speaker names in order (e.g. 'Me,Sarah,John')",
+)
+@click.option("--no-analysis", is_flag=True, help="Skip AI analysis")
+@click.option("--no-google", is_flag=True, help="Skip Google Suite sync (Calendar, Tasks)")
+@click.option("--context", "-c", help="Additional context about the call")
+def process_transcript_cmd(
+    transcript_file: Path,
+    title: str | None,
+    project: str | None,
+    date: str | None,
+    speakers: str | None,
+    no_analysis: bool,
+    no_google: bool,
+    context: str | None,
+):
+    """Process a transcript file (.vtt or .docx) through the analysis pipeline.
+
+    Filename convention: 'project_name DD-MM-YYYY.vtt'
+    The project name and date are auto-parsed from the filename.
+    """
+    from .pipeline import process_transcript
+
+    parsed_date = datetime.strptime(date, "%Y-%m-%d") if date else None
+    speaker_list = [s.strip() for s in speakers.split(",")] if speakers else None
+
+    record = process_transcript(
+        transcript_path=transcript_file,
+        title=title,
+        project=project,
+        date=parsed_date,
+        speakers=speaker_list,
+        skip_analysis=no_analysis,
+        skip_google=no_google,
+        context=context or "",
+    )
+
+    console.print("\n[bold green]Done![/bold green]")
+    console.print(f"  Transcript: {record.output_dir}/transcript.md")
+    console.print(f"  Analysis:   {record.output_dir}/analysis.md")
+
+
 @cli.command()
 def auth():
     """Authenticate with Google Suite (Gmail, Calendar, Tasks).
@@ -99,11 +147,11 @@ def auth():
 @cli.command()
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync")
 def watch(no_google: bool):
-    """Watch the recordings folder and auto-process new files.
+    """Watch for new recordings and transcripts.
 
-    Monitors recordings/ for new audio files and automatically runs
-    the full pipeline when a file appears. Filename must follow the
-    convention: 'project_name DD-MM-YYYY.m4a'
+    Monitors data/input/recordings/ and data/input/transcripts/ and
+    automatically runs the full pipeline when a file appears.
+    Filenames must follow the convention: 'project_name DD-MM-YYYY.ext'
     """
     from .watcher import watch_recordings
 
@@ -113,22 +161,30 @@ def watch(no_google: bool):
 @cli.command(name="process-new")
 @click.option("--no-google", is_flag=True, help="Skip Google Suite sync")
 def process_new(no_google: bool):
-    """Process all unprocessed recordings in the recordings folder."""
-    from .pipeline import process_call
-    from .watcher import find_unprocessed
+    """Process all unprocessed recordings and transcripts."""
+    from .pipeline import process_call, process_transcript
+    from .watcher import find_unprocessed, find_unprocessed_transcripts
 
-    unprocessed = find_unprocessed()
+    unprocessed_audio = find_unprocessed()
+    unprocessed_transcripts = find_unprocessed_transcripts()
 
-    if not unprocessed:
-        console.print("[green]✓[/green] All recordings have been processed.")
+    if not unprocessed_audio and not unprocessed_transcripts:
+        console.print("[green]✓[/green] All recordings and transcripts have been processed.")
         return
 
-    console.print(f"Found {len(unprocessed)} unprocessed recording(s):\n")
-    for f in unprocessed:
-        console.print(f"  • {f.name}")
-    console.print()
+    if unprocessed_audio:
+        console.print(f"Found {len(unprocessed_audio)} unprocessed recording(s):\n")
+        for f in unprocessed_audio:
+            console.print(f"  • {f.name}")
+        console.print()
 
-    for audio_path in unprocessed:
+    if unprocessed_transcripts:
+        console.print(f"Found {len(unprocessed_transcripts)} unprocessed transcript(s):\n")
+        for f in unprocessed_transcripts:
+            console.print(f"  • {f.name}")
+        console.print()
+
+    for audio_path in unprocessed_audio:
         try:
             process_call(
                 audio_path=audio_path,
@@ -136,6 +192,16 @@ def process_new(no_google: bool):
             )
         except Exception as e:
             console.print(f"[red]Error processing {audio_path.name}:[/red] {e}")
+            continue
+
+    for transcript_path in unprocessed_transcripts:
+        try:
+            process_transcript(
+                transcript_path=transcript_path,
+                skip_google=no_google,
+            )
+        except Exception as e:
+            console.print(f"[red]Error processing {transcript_path.name}:[/red] {e}")
             continue
 
 

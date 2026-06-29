@@ -83,7 +83,8 @@ class CallRecord(BaseModel):
     title: str
     project: str = ""
     date: datetime
-    audio_path: str
+    source_path: str = ""
+    audio_path: str = ""
     duration_seconds: float
     speakers: list[str] = Field(default_factory=list)
     transcript: Transcript
