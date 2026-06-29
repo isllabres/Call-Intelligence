@@ -477,8 +477,8 @@ def eval_golden_dataset(suite: EvalSuite, case_filter: str | None = None):
 
     # Check Ollama is reachable
     try:
-        import ollama
-        ollama.list()
+        import httpx
+        httpx.get("http://localhost:11434/api/tags", timeout=5)
     except Exception as e:
         suite.add("golden: ollama connection", False,
                   f"Ollama not reachable — start it with 'ollama serve'. Error: {e}",

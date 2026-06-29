@@ -9,7 +9,7 @@ Before considering any functionality in `src/` complete, the success rate in `ev
 
 ## Architecture
 - `src/call_intel/transcribe.py`: Processes audio to text using local Whisper.
-- `src/call_intel/analyze.py`: Analyzes transcript + project history + emails using local Ollama LLM.
+- `src/call_intel/analyze.py`: Analyzes transcript + project history + emails using PydanticAI with Ollama backend.
 - `src/call_intel/gmail.py`: Fetches relevant email threads from Gmail for context.
 - `src/call_intel/gcalendar.py`: Creates Google Calendar events from detected meetings/deadlines.
 - `src/call_intel/gtasks.py`: Creates Google Tasks from extracted action items.
