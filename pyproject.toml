@@ -29,6 +29,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/call_intel"]
 
+[tool.pytest.ini_options]
+testpaths = ["testing/tests"]
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",

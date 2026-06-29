@@ -2,10 +2,10 @@
 
 ## Build & Test Commands
 - Install dependencies: `uv sync`
-- Run evaluations (Evals): `uv run python evals/run_evals.py`
+- Run evaluations (Evals): `uv run python testing/evals/run_evals.py`
 
 ## Workflow (EDD)
-Before considering any functionality in `src/` complete, the success rate in `evals/run_evals.py` must be at least 90%.
+Before considering any functionality in `src/` complete, the success rate in `testing/evals/run_evals.py` must be at least 90%.
 
 ## Architecture
 - `src/call_intel/transcribe.py`: Processes audio to text using local Whisper.

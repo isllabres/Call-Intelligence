@@ -7,11 +7,11 @@ build/
 .env
 
 # Audio recordings (keep private)
-recordings/*.m4a
-recordings/*.wav
-recordings/*.mp3
-recordings/*.mp4
-recordings/*.webm
+data/input/recordings/*.m4a
+data/input/recordings/*.wav
+data/input/recordings/*.mp3
+data/input/recordings/*.mp4
+data/input/recordings/*.webm
 
 # Whisper models cache
 *.pt
